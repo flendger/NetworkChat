@@ -31,7 +31,7 @@ public class ChatServer {
         try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)){
             System.out.println(String.format("Server is running on port: %d", serverSocket.getLocalPort()));
 
-            authService = new StaticAuthService();
+            authService = new DBAuthService();
             clientHandlers = new HashSet<>();
 
             scanner = new Scanner(System.in);

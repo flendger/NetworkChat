@@ -4,12 +4,12 @@ public interface AuthService {
     Record findRecord(String login, String password);
 
     class Record {
-        private long id;
+        private int id;
         private String name;
         private String login;
         private String password;
 
-        public Record(long id, String name, String login, String password) {
+        public Record(int id, String name, String login, String password) {
             this.id = id;
             this.name = name;
             this.login = login;
