@@ -27,6 +27,31 @@ public class DBAuthService implements AuthService {
         }
     }
 
+    @Override
+    public boolean changeName(Record record, String name) {
+        Connection conn = connectDB();
+
+        try {
+            PreparedStatement st  = null;
+            st = conn.prepareStatement("UPDATE users\n" +
+                    "   SET name = ?\n" +
+                    " WHERE id = ?;");
+
+            st.setString(1, name);
+            st.setInt(2, record.getId());
+            st.executeUpdate();
+            st.close();
+
+            record.setName(name);
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            disconnectDB(conn);
+        }
+    }
+
     private static Connection connectDB() {
         Connection conn = null;
         try {
@@ -51,6 +76,4 @@ public class DBAuthService implements AuthService {
             System.out.println(e.getMessage());
         }
     }
-
-
 }

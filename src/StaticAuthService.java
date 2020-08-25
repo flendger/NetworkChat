@@ -24,4 +24,9 @@ public class StaticAuthService implements AuthService {
         }
         return null;
     }
+
+    @Override
+    public boolean changeName(Record record, String name) {
+        return false;
+    }
 }

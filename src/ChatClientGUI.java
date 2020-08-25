@@ -121,14 +121,42 @@ public class ChatClientGUI extends JFrame{
                 openAuth();
             }
         });
-
         menuConnections.add(itemConnect);
+
+        JMenuItem itemChgName = new JMenuItem("Change name");
+        itemChgName.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentUser.isEmpty()) {
+                    JOptionPane.showMessageDialog(contentPane, "You are not logged in...");
+                    return;
+                }
+
+                if (!socket.isConnected() || socket.isClosed()){
+                    openConnection();
+                }
+                changeName();
+            }
+        });
+        menuConnections.add(itemChgName);
+
         mainMenu.add(menuConnections);
         contentPane.add(mainMenu, BorderLayout.NORTH);
 
         setVisible(true);
         chatField.setFocusable(true);
         chatField.grabFocus();
+    }
+
+    private void changeName(){
+        String newName = JOptionPane.showInputDialog(null, "Enter new name");
+        if (!newName.isEmpty()) {
+            try {
+                sendMsg(new Message(MessageType.CHGNAME, currentUser, newName).toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void openAuth(){
@@ -200,6 +228,14 @@ public class ChatClientGUI extends JFrame{
                 return;
             case USERS:
                 updateUsers(msg.getMessageArray());
+                return;
+            case CHGNAMEOK:
+                removeUser(msg.getUser());
+                addUser(msg.getMessage());
+                if (currentUser.equals(msg.getUser())) {
+                    currentUser = msg.getMessage();
+                }
+                addMessageToChatField(String.format("User %s changed nickname to %s...", msg.getUser(), msg.getMessage()));
                 return;
             default:
                 return;

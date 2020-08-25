@@ -91,6 +91,11 @@ public class ClientHandler {
                 case GET_USERS:
                     sendMessage(new Message(MessageType.USERS, "server", server.getUsersArray()).toString());
                     break;
+                case CHGNAME:
+                    if (server.getAuthService().changeName(record, message.getMessage())) {
+                        server.broadcastMessage(new Message(MessageType.CHGNAMEOK, message.getUser(), record.getName()).toString());
+                    }
+                    break;
                 case EXIT:
                     sendMessage((new Message(MessageType.EXIT, "server", "Connection closed")).toString());
                     return;

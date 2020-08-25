@@ -3,6 +3,8 @@ import java.util.Objects;
 public interface AuthService {
     Record findRecord(String login, String password);
 
+    boolean changeName(Record record, String name);
+
     class Record {
         private int id;
         private String name;
@@ -16,7 +18,7 @@ public interface AuthService {
             this.password = password;
         }
 
-        public long getId() {
+        public int getId() {
             return id;
         }
 
@@ -32,6 +34,10 @@ public interface AuthService {
             return password;
         }
 
+        public void setName(String name) {
+            this.name = name;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -45,7 +51,7 @@ public interface AuthService {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, name, login, password);
+            return Objects.hash(id, login);
         }
     }
 }
