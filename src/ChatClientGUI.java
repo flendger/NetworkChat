@@ -1,9 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -11,7 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Arrays;
 
-public class ChatClientGUI extends JFrame{
+public class ChatClientGUI extends JFrame {
     private static final String SERVER_ADDR = "localhost";
     private static final int SERVER_PORT = 8765;
     private Socket socket;
@@ -49,6 +46,21 @@ public class ChatClientGUI extends JFrame{
         usersPanel.setLayout(new BoxLayout(usersPanel, BoxLayout.Y_AXIS));
         usersPanel.add(new JLabel("USERS:"));
 
+        userList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    String selectedUser = userList.getSelectedValue().toString();
+                    if (!selectedUser.equals(currentUser)) {
+                        chatField.setText(String.format("[%s]: ", selectedUser));
+                        chatField.grabFocus();
+                    }
+                } else {
+                super.mouseClicked(e);
+                }
+            }
+        });
+
         JScrollPane usersScroll = new JScrollPane(userList);
         usersPanel.add(usersScroll);
 
@@ -74,10 +86,28 @@ public class ChatClientGUI extends JFrame{
         ActionListener submitAction = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!chatField.getText().isBlank()) {
-                    if (socket.isConnected()){
+                String currentText = chatField.getText();
+                if (!currentText.isBlank()) {
+                    if (socket.isConnected()) {
                         try {
-                            Message msg = new Message(MessageType.MSG, currentUser, chatField.getText());
+                            int idxPrv = currentText.indexOf("]:");
+                            Message msg = null;
+                            if (currentText.substring(0, 1).equals("[") && idxPrv != -1) {
+                                //private msg
+                                String userTo = currentText.substring(1, idxPrv);
+                                String msgText = "";
+                                if (idxPrv + 2 < currentText.length()) {
+                                    msgText = currentText.substring(idxPrv + 2).trim();
+                                }
+                                if (msgText.isEmpty()) {
+                                    return;
+                                }
+                                msg = new Message(MessageType.PRVMSG, currentUser, userTo, msgText);
+                            } else {
+                                //broadcast message
+                                msg = new Message(MessageType.MSG, currentUser, "ALL", currentText);
+                            }
+
                             sendMsg(msg.toString());
                             chatField.setText("");
                             chatField.grabFocus();
@@ -98,8 +128,8 @@ public class ChatClientGUI extends JFrame{
                 super.windowClosing(e);
 
                 try {
-                    if (socket.isConnected() && !socket.isClosed()){
-                        sendMsg(new Message(MessageType.EXIT, currentUser, "close connection").toString());
+                    if (socket.isConnected() && !socket.isClosed()) {
+                        sendMsg(new Message(MessageType.EXIT, currentUser, "server", "close connection").toString());
                     }
                 } catch (IOException exc) {
                     exc.printStackTrace();
@@ -115,7 +145,7 @@ public class ChatClientGUI extends JFrame{
         itemConnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!socket.isConnected() || socket.isClosed()){
+                if (!socket.isConnected() || socket.isClosed()) {
                     openConnection();
                 }
                 openAuth();
@@ -132,7 +162,7 @@ public class ChatClientGUI extends JFrame{
                     return;
                 }
 
-                if (!socket.isConnected() || socket.isClosed()){
+                if (!socket.isConnected() || socket.isClosed()) {
                     openConnection();
                 }
                 changeName();
@@ -148,23 +178,23 @@ public class ChatClientGUI extends JFrame{
         chatField.grabFocus();
     }
 
-    private void changeName(){
+    private void changeName() {
         String newName = JOptionPane.showInputDialog(null, "Enter new name");
         if (!newName.isEmpty()) {
             try {
-                sendMsg(new Message(MessageType.CHGNAME, currentUser, newName).toString());
+                sendMsg(new Message(MessageType.CHGNAME, currentUser, "server", newName).toString());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void openAuth(){
-        if (socket.isConnected()){
+    private void openAuth() {
+        if (socket.isConnected()) {
             AuthFormGUI authFormGUI = new AuthFormGUI();
             String[] msgArr = authFormGUI.showAuth();
             if (!msgArr[0].isEmpty()) {
-                Message msg = new Message(MessageType.AUTH, msgArr[0], msgArr[1]);
+                Message msg = new Message(MessageType.AUTH, msgArr[0], "server", msgArr[1]);
                 System.out.println(msg);
                 try {
                     sendMsg(msg.toString());
@@ -193,17 +223,20 @@ public class ChatClientGUI extends JFrame{
         closeConnection();
     }
 
-    synchronized private void handleIncomingMessage(Message msg){
-        switch (msg.getMessageType()){
+    synchronized private void handleIncomingMessage(Message msg) {
+        switch (msg.getMessageType()) {
             case MSG:
-                addMessageToChatField(String.format("%s: %s", msg.getUser(), msg.getMessage()));
+                addMessageToChatField(String.format("%s: %s", msg.getUserFrom(), msg.getMessage()));
+                return;
+            case PRVMSG:
+                addMessageToChatField(String.format("[PRIVATE] %s: %s", msg.getUserFrom(), msg.getMessage()));
                 return;
             case AUTH_OK:
                 currentUser = msg.getMessage();
                 addMessageToChatField("Authorization is OK...");
                 addMessageToChatField(String.format("You are logged in as %s ...", currentUser));
                 try {
-                    sendMsg(new Message(MessageType.GET_USERS, currentUser, "").toString());
+                    sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", "").toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -213,7 +246,7 @@ public class ChatClientGUI extends JFrame{
                 return;
             case EXIT:
                 try {
-                    sendMsg(new Message(MessageType.EXIT, currentUser, "close connection").toString());
+                    sendMsg(new Message(MessageType.EXIT, currentUser, "server", "close connection").toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -230,19 +263,19 @@ public class ChatClientGUI extends JFrame{
                 updateUsers(msg.getMessageArray());
                 return;
             case CHGNAMEOK:
-                removeUser(msg.getUser());
+                removeUser(msg.getUserTo());
                 addUser(msg.getMessage());
-                if (currentUser.equals(msg.getUser())) {
+                if (currentUser.equals(msg.getUserTo())) {
                     currentUser = msg.getMessage();
                 }
-                addMessageToChatField(String.format("User %s changed nickname to %s...", msg.getUser(), msg.getMessage()));
+                addMessageToChatField(String.format("User %s changed nickname to %s...", msg.getUserTo(), msg.getMessage()));
                 return;
             default:
                 return;
         }
     }
 
-    private void addUser(String user){
+    private void addUser(String user) {
         int userIdx = usersListModel.indexOf(user);
         if (userIdx == -1) {
             usersListModel.addElement(user);
@@ -263,7 +296,7 @@ public class ChatClientGUI extends JFrame{
         usersListModel.addAll(Arrays.asList(users));
     }
 
-    private void openConnection(){
+    private void openConnection() {
         try {
             socket = new Socket();
             synchronized (socket) {
@@ -284,7 +317,7 @@ public class ChatClientGUI extends JFrame{
         }
     }
 
-    private String readMsg() throws IOException{
+    private String readMsg() throws IOException {
         String msg = "";
         synchronized (in) {
             msg = in.readUTF();
@@ -292,7 +325,7 @@ public class ChatClientGUI extends JFrame{
         return msg;
     }
 
-    private void runServerListener(){
+    private void runServerListener() {
         if (socket.isConnected() && !socket.isClosed()) {
             new Thread(new Runnable() {
                 @Override
@@ -303,7 +336,7 @@ public class ChatClientGUI extends JFrame{
         }
     }
 
-    private void closeConnection(){
+    private void closeConnection() {
         try {
             in.close();
         } catch (IOException e) {
@@ -326,7 +359,7 @@ public class ChatClientGUI extends JFrame{
         addMessageToChatField("Connection closed...");
     }
 
-    private void addMessageToChatField(String msg){
+    private void addMessageToChatField(String msg) {
         StringBuilder stringBuilder = new StringBuilder(chatText.getText());
         stringBuilder.append(msg + "\n");
         chatText.setText(stringBuilder.toString());

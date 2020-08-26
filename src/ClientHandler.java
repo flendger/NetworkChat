@@ -48,24 +48,24 @@ public class ClientHandler {
             System.out.println("Waiting for auth...");
             Message message = new Message(in.readUTF());
             if (message.getMessageType() == MessageType.AUTH) {
-                AuthService.Record possibleRecord = server.getAuthService().findRecord(message.getUser(), message.getMessage());
+                AuthService.Record possibleRecord = server.getAuthService().findRecord(message.getUserFrom(), message.getMessage());
                 if (possibleRecord != null) {
                     if (!server.isOccupied(possibleRecord)) {
                         record = possibleRecord;
-                        Message msg = new Message(MessageType.AUTH_OK, "server", record.getName());
+                        Message msg = new Message(MessageType.AUTH_OK, "server", message.getUserFrom(), record.getName());
                         System.out.println(msg.toString());
                         sendMessage(msg.toString());
-                        server.broadcastMessage(new Message(MessageType.LOGIN, "server", record.getName()).toString());
+                        server.broadcastMessage(new Message(MessageType.LOGIN, "server", "ALL", record.getName()).toString());
                         server.subscribe(this);
                         return true;
                     } else {
-                        sendMessage(new Message(MessageType.AUTH_FAILED, "server", String.format("Current user [%s] is already occupied", possibleRecord.getName())).toString());
+                        sendMessage(new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), String.format("Current user [%s] is already occupied", possibleRecord.getName())).toString());
                     }
                 } else {
-                    sendMessage((new Message(MessageType.AUTH_FAILED, "server", "User not found")).toString());
+                    sendMessage((new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), "User not found")).toString());
                 }
             } else if (message.getMessageType() == MessageType.EXIT){
-                sendMessage((new Message(MessageType.EXIT, "server", "Connection closed")).toString());
+                sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(),"Connection closed")).toString());
                 return false;
             }
         }
@@ -88,16 +88,19 @@ public class ClientHandler {
                 case MSG:
                     server.broadcastMessage(message.toString());
                     break;
+                case PRVMSG:
+                    server.privateMessage(message.toString());
+                    break;
                 case GET_USERS:
-                    sendMessage(new Message(MessageType.USERS, "server", server.getUsersArray()).toString());
+                    sendMessage(new Message(MessageType.USERS, "server", message.getUserFrom(), server.getUsersArray()).toString());
                     break;
                 case CHGNAME:
                     if (server.getAuthService().changeName(record, message.getMessage())) {
-                        server.broadcastMessage(new Message(MessageType.CHGNAMEOK, message.getUser(), record.getName()).toString());
+                        server.broadcastMessage(new Message(MessageType.CHGNAMEOK, "server", message.getUserFrom(), record.getName()).toString());
                     }
                     break;
                 case EXIT:
-                    sendMessage((new Message(MessageType.EXIT, "server", "Connection closed")).toString());
+                    sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(), "Connection closed")).toString());
                     return;
             }
         }
@@ -106,7 +109,7 @@ public class ClientHandler {
     public void closeConnection() {
         server.unsubscribe(this);
         if (record != null) {
-            server.broadcastMessage(new Message(MessageType.LOGOFF, "server", record.getName()).toString());
+            server.broadcastMessage(new Message(MessageType.LOGOFF, "server", "ALL", record.getName()).toString());
         }
         System.out.println(String.format("Connection /%s closed", socket));
 

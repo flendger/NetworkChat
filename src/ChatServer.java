@@ -83,6 +83,15 @@ public class ChatServer {
         }
     }
 
+    public synchronized void privateMessage(String message) {
+        Message msg = new Message(message);
+        for (ClientHandler ch : clientHandlers) {
+            if (ch.getRecord().getName().equals(msg.getUserFrom()) || ch.getRecord().getName().equals(msg.getUserTo())){
+                ch.sendMessage(message);
+            }
+        }
+    }
+
     public synchronized String[] getUsersArray(){
         String[] usersArr = new String[clientHandlers.size()];
         int i = 0;

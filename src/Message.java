@@ -3,7 +3,8 @@ public final class Message {
     private final static String USERS_SPLITTER = "&";
     private MessageType messageType = MessageType.NONE;
     private String command = "";
-    private String user = "";
+    private String userFrom = "";
+    private String userTo = "";
     private String message = "";
     private String[] messageArray = {};
 
@@ -22,35 +23,41 @@ public final class Message {
         this.command = msgArr[0];
 
         if (msgArr.length > 1){
-            this.user = msgArr[1];
+            this.userFrom = msgArr[1];
         }
 
-        if (msgArr.length > 2) {
-            this.message = msgArr[2];
+        if (msgArr.length > 2){
+            this.userTo = msgArr[2];
+        }
+
+        if (msgArr.length > 3) {
+            this.message = msgArr[3];
             setMessageArray();
         }
     }
 
-    public Message(MessageType messageType, String user, String message) {
+    public Message(MessageType messageType, String userFrom, String userTo, String message) {
         this.messageType = messageType;
         if (messageType == MessageType.NONE) {
             return;
         }
 
         this.command = messageType.toString();
-        this.user = user;
+        this.userFrom = userFrom;
+        this.userTo = userTo;
         this.message = message;
         setMessageArray();
     }
 
-    public Message(MessageType messageType, String user, String[] messageArray) {
+    public Message(MessageType messageType, String userFrom, String userTo, String[] messageArray) {
         this.messageType = messageType;
         if (messageType == MessageType.NONE) {
             return;
         }
 
         this.command = messageType.toString();
-        this.user = user;
+        this.userFrom = userFrom;
+        this.userTo = userTo;
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < messageArray.length; i++) {
@@ -77,8 +84,12 @@ public final class Message {
         return command;
     }
 
-    public String getUser() {
-        return user;
+    public String getUserFrom() {
+        return userFrom;
+    }
+
+    public String getUserTo() {
+        return userTo;
     }
 
     public String getMessage() {
@@ -91,6 +102,6 @@ public final class Message {
 
     @Override
     public String toString() {
-        return command + COM_SPLITTER + user + COM_SPLITTER + message;
+        return command + COM_SPLITTER + userFrom + COM_SPLITTER + userTo + COM_SPLITTER + message;
     }
 }
