@@ -6,7 +6,7 @@ public class DBAuthService implements AuthService {
     public Record findRecord(String login, String password) {
         Record record = null;
 
-        Connection conn = DBAuthService.connectDB();
+        Connection conn = DBService.connectDB();
         try {
             PreparedStatement st = conn.prepareStatement("SELECT *" +
                     "  FROM users\n" +
@@ -22,14 +22,14 @@ public class DBAuthService implements AuthService {
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
-            DBAuthService.disconnectDB(conn);
+            DBService.disconnectDB(conn);
             return record;
         }
     }
 
     @Override
     public boolean changeName(Record record, String name) {
-        Connection conn = connectDB();
+        Connection conn = DBService.connectDB();
 
         try {
             PreparedStatement st  = null;
@@ -48,32 +48,9 @@ public class DBAuthService implements AuthService {
             e.printStackTrace();
             return false;
         } finally {
-            disconnectDB(conn);
+            DBService.disconnectDB(conn);
         }
     }
 
-    private static Connection connectDB() {
-        Connection conn = null;
-        try {
-            // db parameters
-            String url = "jdbc:sqlite:chat.db";
-            // create a connection to the database
-            conn = DriverManager.getConnection(url);
-            return conn;
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            return conn;
-        }
-    }
 
-    private static void disconnectDB(Connection conn) {
-        try {
-            if (conn != null) {
-                conn.close();
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
 }
