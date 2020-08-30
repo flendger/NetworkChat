@@ -52,7 +52,7 @@ public class ClientHandler {
                 if (possibleRecord != null) {
                     if (!server.isOccupied(possibleRecord)) {
                         record = possibleRecord;
-                        Message msg = new Message(MessageType.AUTH_OK, "server", message.getUserFrom(), record.getName());
+                        Message msg = new Message(MessageType.AUTH_OK, "server", record.getName(), String.valueOf(record.getId()));
                         System.out.println(msg.toString());
                         sendMessage(msg.toString());
                         server.broadcastMessage(new Message(MessageType.LOGIN, "server", "ALL", record.getName()).toString());

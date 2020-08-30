@@ -22,6 +22,7 @@ public class ChatClientGUI extends JFrame {
     private final JList userList = new JList(usersListModel);
 
     private String currentUser = "";
+    private int currentId = -1;
 
     public ChatClientGUI() {
         prepareGUI();
@@ -224,25 +225,33 @@ public class ChatClientGUI extends JFrame {
     }
 
     synchronized private void handleIncomingMessage(Message msg) {
+        String msgTxt = "";
         switch (msg.getMessageType()) {
             case MSG:
-                addMessageToChatField(String.format("%s: %s", msg.getUserFrom(), msg.getMessage()));
+                msgTxt = String.format("%s: %s", msg.getUserFrom(), msg.getMessage());
+                addMessageToChat(msgTxt);
+                ClientLogService.appendLog(currentId, msgTxt);
                 return;
             case PRVMSG:
-                addMessageToChatField(String.format("[PRIVATE] %s: %s", msg.getUserFrom(), msg.getMessage()));
+                msgTxt = String.format("[PRIVATE] %s: %s", msg.getUserFrom(), msg.getMessage());
+                addMessageToChat(msgTxt);
+                ClientLogService.appendLog(currentId, msgTxt);
                 return;
             case AUTH_OK:
-                currentUser = msg.getMessage();
-                addMessageToChatField("Authorization is OK...");
-                addMessageToChatField(String.format("You are logged in as %s ...", currentUser));
+                currentUser = msg.getUserTo();
+                currentId = Integer.valueOf(msg.getMessage());
+                clearChat();
+                addMessageToChat("Authorization is OK...");
+                addMessageToChat(String.format("You are logged in as %s [id: %d] ...", currentUser, currentId));
                 try {
                     sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", "").toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                addMessageToChat(ClientLogService.readLog(currentId));
                 return;
             case AUTH_FAILED:
-                addMessageToChatField("Authorization failed: " + msg.getMessage());
+                addMessageToChat("Authorization failed: " + msg.getMessage());
                 return;
             case EXIT:
                 try {
@@ -252,11 +261,11 @@ public class ChatClientGUI extends JFrame {
                 }
                 return;
             case LOGIN:
-                addMessageToChatField(String.format("User %s entered chat...", msg.getMessage()));
+                addMessageToChat(String.format("User %s entered chat...", msg.getMessage()));
                 addUser(msg.getMessage());
                 return;
             case LOGOFF:
-                addMessageToChatField(String.format("User %s left chat...", msg.getMessage()));
+                addMessageToChat(String.format("User %s left chat...", msg.getMessage()));
                 removeUser(msg.getMessage());
                 return;
             case USERS:
@@ -268,7 +277,7 @@ public class ChatClientGUI extends JFrame {
                 if (currentUser.equals(msg.getUserTo())) {
                     currentUser = msg.getMessage();
                 }
-                addMessageToChatField(String.format("User %s changed nickname to %s...", msg.getUserTo(), msg.getMessage()));
+                addMessageToChat(String.format("User %s changed nickname to %s...", msg.getUserTo(), msg.getMessage()));
                 return;
             default:
                 return;
@@ -307,7 +316,7 @@ public class ChatClientGUI extends JFrame {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            addMessageToChatField("Connection to server failed...");
+            addMessageToChat("Connection to server failed...");
         }
     }
 
@@ -356,13 +365,17 @@ public class ChatClientGUI extends JFrame {
         }
 
         currentUser = "";
-        addMessageToChatField("Connection closed...");
+        addMessageToChat("Connection closed...");
     }
 
-    private void addMessageToChatField(String msg) {
+    private void addMessageToChat(String msg) {
         StringBuilder stringBuilder = new StringBuilder(chatText.getText());
         stringBuilder.append(msg + "\n");
         chatText.setText(stringBuilder.toString());
         stringBuilder.setLength(0);
+    }
+
+    private void clearChat() {
+        chatText.setText("");
     }
 }
