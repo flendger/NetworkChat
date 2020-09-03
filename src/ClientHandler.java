@@ -3,6 +3,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
     private AuthService.Record record;
@@ -18,7 +21,8 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(new Runnable() {
+            ExecutorService exs = Executors.newSingleThreadExecutor();
+            exs.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -31,8 +35,9 @@ public class ClientHandler {
                         closeConnection();
                     }
                 }
-            })
-                    .start();
+            });
+
+            exs.shutdown();
 
         } catch (IOException e) {
             throw new RuntimeException("Client handler was not created");
