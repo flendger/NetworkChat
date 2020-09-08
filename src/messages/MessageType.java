@@ -1,3 +1,5 @@
+package messages;
+
 public enum MessageType {
     AUTH {
         @Override
