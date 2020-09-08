@@ -1,3 +1,5 @@
+package messages;
+
 public final class Message {
     private final static String COM_SPLITTER = ";";
     private final static String USERS_SPLITTER = "&";

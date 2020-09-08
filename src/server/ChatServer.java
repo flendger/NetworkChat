@@ -1,3 +1,9 @@
+package server;
+
+import messages.Message;
+import serverServices.AuthService;
+import serverServices.DBAuthService;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;

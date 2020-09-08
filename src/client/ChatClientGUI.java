@@ -1,3 +1,9 @@
+package client;
+
+import messages.Message;
+import messages.MessageType;
+import serverServices.ClientLogService;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

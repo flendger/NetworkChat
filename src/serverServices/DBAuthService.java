@@ -1,3 +1,5 @@
+package serverServices;
+
 import java.sql.*;
 
 public class DBAuthService implements AuthService {
