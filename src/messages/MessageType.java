@@ -67,6 +67,12 @@ public enum MessageType {
             return "/chgnameok";
         }
     },
+    CHGNAMEFAILED {
+        @Override
+        public String toString() {
+            return "/chgnamefailed";
+        }
+    },
     PRVMSG {
         @Override
         public String toString() {
@@ -104,6 +110,8 @@ public enum MessageType {
                 return CHGNAME;
             case "/chgnameok":
                 return CHGNAMEOK;
+            case "/chgnamefailed":
+                return CHGNAMEFAILED;
             case "/prvmsg":
                 return PRVMSG;
             default:

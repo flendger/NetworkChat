@@ -34,8 +34,16 @@ public class DBAuthService implements AuthService {
         Connection conn = DBService.connectDB();
 
         try {
-            PreparedStatement st  = null;
-            st = conn.prepareStatement("UPDATE users\n" +
+            PreparedStatement readSt = conn.prepareStatement("SELECT *" +
+                    "  FROM users\n" +
+                    " WHERE name = ?;");
+            readSt.setString(1, name);
+            ResultSet rs = readSt.executeQuery();
+            if (rs.next()) {
+                return false;
+            }
+
+            PreparedStatement st  = conn.prepareStatement("UPDATE users\n" +
                     "   SET name = ?\n" +
                     " WHERE id = ?;");
 

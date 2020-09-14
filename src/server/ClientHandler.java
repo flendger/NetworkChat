@@ -107,6 +107,8 @@ public class ClientHandler {
                 case CHGNAME:
                     if (server.getAuthService().changeName(record, message.getMessage())) {
                         server.broadcastMessage(new Message(MessageType.CHGNAMEOK, "server", message.getUserFrom(), record.getName()).toString());
+                    } else {
+                        server.broadcastMessage(new Message(MessageType.CHGNAMEFAILED, "server", message.getUserFrom(), record.getName()).toString());
                     }
                     break;
                 case EXIT:

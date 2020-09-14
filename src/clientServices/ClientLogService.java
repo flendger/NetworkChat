@@ -1,4 +1,4 @@
-package serverServices;
+package clientServices;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,7 +8,12 @@ public class ClientLogService {
         ArrayList<String> strList = new ArrayList<>();
 
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(openLog(id)));
+            File logFile = openLog(id);
+            if (!logFile.exists()) {
+                return "";
+            }
+
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
             String curLine = "";
 
             int lineCounter = 0;
@@ -37,6 +42,10 @@ public class ClientLogService {
     }
 
     public static void appendLog(int id, String txt) {
+        if (txt.trim().isEmpty()) {
+            return;
+        }
+
         try {
             File file = openLog(id);
             BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
