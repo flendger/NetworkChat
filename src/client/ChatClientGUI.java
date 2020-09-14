@@ -6,6 +6,7 @@ import messages.MessageType;
 import clientServices.ClientLogService;
 
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
@@ -14,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 
 
-//TODO: 20) сортировка списка пользователей по алфавиту (в том числе, при изменении ника)
 //TODO: 25) add network settings to client
 //TODO: 23) add text colors to chat text field
 //TODO: 24) add users registration
@@ -96,7 +96,11 @@ public class ChatClientGUI extends JFrame implements chatClient{
 
         chatText.setFont(new Font(Font.DIALOG, Font.BOLD, 14));
         chatText.setEditable(false);
-        chatPanel.add(chatText, BorderLayout.CENTER);
+        DefaultCaret caret = (DefaultCaret)chatText.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+        JScrollPane chatScroll = new JScrollPane(chatText);
+        chatPanel.add(chatScroll, BorderLayout.CENTER);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(chatField, BorderLayout.CENTER);
