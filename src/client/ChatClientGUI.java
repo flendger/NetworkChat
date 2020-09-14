@@ -20,8 +20,8 @@ public class ChatClientGUI extends JFrame implements chatClient{
     private final JTextArea chatText = new JTextArea();
     private final JTextField chatField = new JTextField();
     private final JButton submitBtn = new JButton("Submit");
-    private final DefaultListModel usersListModel = new DefaultListModel();
-    private final JList userList = new JList(usersListModel);
+    private final DefaultListModel<String> usersListModel = new DefaultListModel<>();
+    private final JList<String> userList = new JList<>(usersListModel);
 
     private String currentUser = "";
     private int currentId = -1;
@@ -53,7 +53,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    String selectedUser = userList.getSelectedValue().toString();
+                    String selectedUser = userList.getSelectedValue();
                     if (!selectedUser.equals(currentUser)) {
                         chatField.setText(String.format("[%s]: ", selectedUser));
                         chatField.grabFocus();
@@ -86,42 +86,39 @@ public class ChatClientGUI extends JFrame implements chatClient{
 
         contentPane.add(splitPanel);
 
-        ActionListener submitAction = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String currentText = chatField.getText();
-                if (currentText.isBlank()) {
-                    return;
-                }
+        ActionListener submitAction = e -> {
+            String currentText = chatField.getText();
+            if (currentText.isBlank()) {
+                return;
+            }
 
-                if (currentUser.isEmpty()) {
-                    JOptionPane.showMessageDialog(contentPane, "You are not logged in...");
-                    return;
-                }
+            if (currentUser.isEmpty()) {
+                JOptionPane.showMessageDialog(contentPane, "You are not logged in...");
+                return;
+            }
 
-                if (clientService.isActive()) {
-                    int idxPrv = currentText.indexOf("]:");
-                    Message msg;
-                    if (currentText.charAt(0) == '[' && idxPrv != -1) {
-                        //private msg
-                        String userTo = currentText.substring(1, idxPrv);
-                        String msgText = "";
-                        if (idxPrv + 2 < currentText.length()) {
-                            msgText = currentText.substring(idxPrv + 2).trim();
-                        }
-                        if (msgText.isEmpty()) {
-                            return;
-                        }
-                        msg = new Message(MessageType.PRVMSG, currentUser, userTo, msgText);
-                    } else {
-                        //broadcast message
-                        msg = new Message(MessageType.MSG, currentUser, "ALL", currentText);
+            if (clientService.isActive()) {
+                int idxPrv = currentText.indexOf("]:");
+                Message msg;
+                if (currentText.charAt(0) == '[' && idxPrv != -1) {
+                    //private msg
+                    String userTo = currentText.substring(1, idxPrv);
+                    String msgText = "";
+                    if (idxPrv + 2 < currentText.length()) {
+                        msgText = currentText.substring(idxPrv + 2).trim();
                     }
-
-                    clientService.sendMsg(msg);
-                    chatField.setText("");
-                    chatField.grabFocus();
+                    if (msgText.isEmpty()) {
+                        return;
+                    }
+                    msg = new Message(MessageType.PRVMSG, currentUser, userTo, msgText);
+                } else {
+                    //broadcast message
+                    msg = new Message(MessageType.MSG, currentUser, "ALL", currentText);
                 }
+
+                clientService.sendMsg(msg);
+                chatField.setText("");
+                chatField.grabFocus();
             }
         };
 
@@ -144,41 +141,32 @@ public class ChatClientGUI extends JFrame implements chatClient{
         JMenu menuConnections = new JMenu("Connections");
 
         JMenuItem itemConnect = new JMenuItem("Connect");
-        itemConnect.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!clientService.isActive()) {
-                    connect();
-                }
-                openAuth();
+        itemConnect.addActionListener(e -> {
+            if (!clientService.isActive()) {
+                connect();
             }
+            openAuth();
         });
         menuConnections.add(itemConnect);
 
         JMenuItem itemChgName = new JMenuItem("Change name");
-        itemChgName.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentUser.isEmpty()) {
-                    JOptionPane.showMessageDialog(contentPane, "You are not logged in...");
-                    return;
-                }
-
-                if (!clientService.isActive()) {
-                    connect();
-                }
-                changeName();
+        itemChgName.addActionListener(e -> {
+            if (currentUser.isEmpty()) {
+                JOptionPane.showMessageDialog(contentPane, "You are not logged in...");
+                return;
             }
+
+            if (!clientService.isActive()) {
+                connect();
+            }
+            changeName();
         });
         menuConnections.add(itemChgName);
 
         JMenuItem itemDisconnect = new JMenuItem("Disconnect");
-        itemDisconnect.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (clientService.isActive() && !currentUser.isEmpty()) {
-                    clientService.sendMsg(new Message(MessageType.EXIT, currentUser, "server", "close connection"));
-                }
+        itemDisconnect.addActionListener(e -> {
+            if (clientService.isActive() && !currentUser.isEmpty()) {
+                clientService.sendMsg(new Message(MessageType.EXIT, currentUser, "server", "close connection"));
             }
         });
         menuConnections.add(itemDisconnect);
