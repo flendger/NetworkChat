@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 //TODO: 20) сортировка списка пользователей по алфавиту (в том числе, при изменении ника)
@@ -235,8 +237,10 @@ public class ChatClientGUI extends JFrame implements chatClient{
         int userIdx = usersListModel.indexOf(user);
         if (userIdx == -1) {
             usersListModel.addElement(user);
-        } else {
-            usersListModel.setElementAt(user, userIdx);
+            List namesList = Arrays.asList(usersListModel.toArray());
+            Collections.sort(namesList);
+            usersListModel.removeAllElements();
+            usersListModel.addAll(namesList);
         }
     }
 
@@ -249,7 +253,9 @@ public class ChatClientGUI extends JFrame implements chatClient{
 
     private void updateUsers(String[] users) {
         usersListModel.removeAllElements();
-        usersListModel.addAll(Arrays.asList(users));
+        List namesList = Arrays.asList(users);
+        Collections.sort(namesList);
+        usersListModel.addAll(namesList);
     }
 
     private void addMessageToChat(String msg) {
