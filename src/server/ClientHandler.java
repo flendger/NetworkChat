@@ -28,18 +28,15 @@ public class ClientHandler {
             out = new DataOutputStream(socket.getOutputStream());
 
             ExecutorService exs = Executors.newSingleThreadExecutor();
-            exs.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (doAuth()) {
-                            readMessage();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } finally {
-                        closeConnection();
+            exs.execute(() -> {
+                try {
+                    if (doAuth()) {
+                        readMessage();
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    closeConnection();
                 }
             });
 
@@ -93,7 +90,7 @@ public class ClientHandler {
     public void readMessage() throws IOException {
         while (true){
             Message message = new Message(in.readUTF());
-            System.out.println(String.format("Incoming message from %s: %s", record.getName(), message));
+            System.out.printf("Incoming message from %s: %s%n", record.getName(), message);
 
             switch (message.getMessageType()) {
                 case MSG:
@@ -124,7 +121,7 @@ public class ClientHandler {
         if (record != null) {
             server.broadcastMessage(new Message(MessageType.LOGOFF, "server", "ALL", record.getName()).toString());
         }
-        System.out.println(String.format("Connection /%s closed", socket));
+        System.out.printf("Connection /%s closed%n", socket);
 
         try {
             in.close();
