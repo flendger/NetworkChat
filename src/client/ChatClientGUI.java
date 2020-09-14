@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 
-//TODO: 13) клиент: добавить отображение текущего пользователя
 //TODO: 14) клиент: запрет вызова формы авторизации без выхода из текущей сессии
 //TODO: 20) сортировка списка пользователей по алфавиту (в том числе, при изменении ника)
 //TODO: 25) add network settings to client
@@ -40,7 +39,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
     }
 
     private void prepareGUI() {
-        setTitle("Chat client...");
+        setChatTitle();
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -59,7 +58,9 @@ public class ChatClientGUI extends JFrame implements chatClient{
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    clientService.sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", ""));
+                    if (clientService.isActive()) {
+                        clientService.sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", ""));
+                    }
                 } else {
                     super.mouseClicked(e);
                 }
@@ -261,6 +262,10 @@ public class ChatClientGUI extends JFrame implements chatClient{
         chatText.setText("");
     }
 
+    private void setChatTitle() {
+        setTitle("Simple chat... " + ((currentUser.isEmpty()) ? "":("[" + currentUser + "]")));
+    }
+
     @Override
     public synchronized void handleIncomingMessage(Message msg) {
         String msgTxt;
@@ -283,6 +288,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
                 addMessageToChat(String.format("You are logged in as %s [id: %d] ...", currentUser, currentId));
                 clientService.sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", ""));
                 addMessageToChat(ClientLogService.readLog(currentId));
+                setChatTitle();
                 return;
             case AUTH_FAILED:
                 addMessageToChat("Authorization failed: " + msg.getMessage());
@@ -309,6 +315,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
                     currentUser = msg.getMessage();
                 }
                 addMessageToChat(String.format("User %s changed nickname to %s...", msg.getUserTo(), msg.getMessage()));
+                setChatTitle();
                 return;
             case CHGNAMEFAILED:
                 addMessageToChat(String.format("Can't change nickname to %s. Possibly the name has already occupied...", msg.getUserTo()));
@@ -321,5 +328,6 @@ public class ChatClientGUI extends JFrame implements chatClient{
         currentUser = "";
         currentId = -1;
         addMessageToChat("Connection closed...");
+        setChatTitle();
     }
 }
