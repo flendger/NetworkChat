@@ -25,24 +25,18 @@ public class ClientService {
     }
 
     public void openConnection(String srvAddress, int srvPort) throws IOException{
-        //TODO: remake to clear socket without new object
         socket = new Socket();
-            synchronized (socket) {
-                socket.connect(new InetSocketAddress(srvAddress, srvPort));
-                in = new DataInputStream(socket.getInputStream());
-                out = new DataOutputStream(socket.getOutputStream());
-                runServerListener();
-            }
+        synchronized (socket) {
+            socket.connect(new InetSocketAddress(srvAddress, srvPort));
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
+            runServerListener();
+        }
     }
 
     private void runServerListener() {
         if (isActive()) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    listenServer();
-                }
-            }).start();
+            new Thread(this::listenServer).start();
         }
     }
 
