@@ -11,6 +11,13 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.util.Arrays;
 
+
+//TODO: 13) клиент: добавить отображение текущего пользователя
+//TODO: 14) клиент: запрет вызова формы авторизации без выхода из текущей сессии
+//TODO: 20) сортировка списка пользователей по алфавиту (в том числе, при изменении ника)
+//TODO: 25) add network settings to client
+//TODO: 23) add text colors to chat text field
+//TODO: 24) add users registration
 public class ChatClientGUI extends JFrame implements chatClient{
     private static final String SERVER_ADDR = "localhost";
     private static final int SERVER_PORT = 8765;
@@ -47,7 +54,18 @@ public class ChatClientGUI extends JFrame implements chatClient{
         //users list
         JPanel usersPanel = new JPanel();
         usersPanel.setLayout(new BoxLayout(usersPanel, BoxLayout.Y_AXIS));
-        usersPanel.add(new JLabel("USERS:"));
+        JLabel usersLabel = new JLabel("USERS:");
+        usersLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    clientService.sendMsg(new Message(MessageType.GET_USERS, currentUser, "server", ""));
+                } else {
+                    super.mouseClicked(e);
+                }
+            }
+        });
+        usersPanel.add(usersLabel);
 
         userList.addMouseListener(new MouseAdapter() {
             @Override

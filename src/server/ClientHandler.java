@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+// TODO: передавать в функцию отправки сообщений объект, а не текст
 public class ClientHandler {
     private AuthService.Record record;
     private final ChatServer server;
