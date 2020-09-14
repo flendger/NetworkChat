@@ -176,7 +176,6 @@ public class ChatClientGUI extends JFrame implements chatClient{
         itemDisconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //TODO: update userlist after disconnection
                 if (clientService.isActive() && !currentUser.isEmpty()) {
                     clientService.sendMsg(new Message(MessageType.EXIT, currentUser, "server", "close connection"));
                 }
@@ -312,6 +311,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
 
     @Override
     public void connectionClosed() {
+        removeUser(currentUser);
         currentUser = "";
         currentId = -1;
         addMessageToChat("Connection closed...");
