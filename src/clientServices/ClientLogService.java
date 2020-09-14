@@ -14,7 +14,7 @@ public class ClientLogService {
             }
 
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
-            String curLine = "";
+            String curLine;
 
             int lineCounter = 0;
             while ((curLine = reader.readLine()) !=null){

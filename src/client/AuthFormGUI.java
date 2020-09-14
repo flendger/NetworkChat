@@ -6,9 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class AuthFormGUI extends JDialog {
-    private JTextField loginField = new JTextField();
-    private JPasswordField passField = new JPasswordField();
-    private String[] result = {"", ""};
+    private final JTextField loginField = new JTextField();
+    private final JPasswordField passField = new JPasswordField();
+    private final String[] result = {"", ""};
 
     public AuthFormGUI() {
         prepareGUI();
@@ -69,24 +69,18 @@ public class AuthFormGUI extends JDialog {
         btnPanel.setLayout(new FlowLayout());
 
         JButton btnOK = new JButton("OK");
-        btnOK.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                result[0] = loginField.getText();
-                result[1] = new String(passField.getPassword());
-                dispose();
-            }
+        btnOK.addActionListener(e -> {
+            result[0] = loginField.getText();
+            result[1] = new String(passField.getPassword());
+            dispose();
         });
         btnPanel.add(btnOK);
 
         JButton btnCancel = new JButton("Cancel");
-        btnCancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                result[0] = "";
-                result[1] = "";
-                dispose();
-            }
+        btnCancel.addActionListener(e -> {
+            result[0] = "";
+            result[1] = "";
+            dispose();
         });
         btnPanel.add(btnCancel);
 
