@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// TODO: передавать в функцию отправки сообщений объект, а не текст
 public class ClientHandler {
     private AuthService.Record record;
     private final ChatServer server;
@@ -62,26 +61,26 @@ public class ClientHandler {
                         record = possibleRecord;
                         Message msg = new Message(MessageType.AUTH_OK, "server", record.getName(), String.valueOf(record.getId()));
                         System.out.println(msg.toString());
-                        sendMessage(msg.toString());
-                        server.broadcastMessage(new Message(MessageType.LOGIN, "server", "ALL", record.getName()).toString());
+                        sendMessage(msg);
+                        server.broadcastMessage(new Message(MessageType.LOGIN, "server", "ALL", record.getName()));
                         server.subscribe(this);
                         return true;
                     } else {
-                        sendMessage(new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), String.format("Current user [%s] is already occupied", possibleRecord.getName())).toString());
+                        sendMessage(new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), String.format("Current user [%s] is already occupied", possibleRecord.getName())));
                     }
                 } else {
-                    sendMessage((new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), "User not found")).toString());
+                    sendMessage((new Message(MessageType.AUTH_FAILED, "server", message.getUserFrom(), "User not found")));
                 }
             } else if (message.getMessageType() == MessageType.EXIT){
-                sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(),"Connection closed")).toString());
+                sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(),"Connection closed")));
                 return false;
             }
         }
     }
 
-    public void sendMessage(String message) {
+    public void sendMessage(Message msg) {
         try {
-            out.writeUTF(message);
+            out.writeUTF(msg.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,23 +93,23 @@ public class ClientHandler {
 
             switch (message.getMessageType()) {
                 case MSG:
-                    server.broadcastMessage(message.toString());
+                    server.broadcastMessage(message);
                     break;
                 case PRVMSG:
-                    server.privateMessage(message.toString());
+                    server.privateMessage(message);
                     break;
                 case GET_USERS:
-                    sendMessage(new Message(MessageType.USERS, "server", message.getUserFrom(), server.getUsersArray()).toString());
+                    sendMessage(new Message(MessageType.USERS, "server", message.getUserFrom(), server.getUsersArray()));
                     break;
                 case CHGNAME:
                     if (server.getAuthService().changeName(record, message.getMessage())) {
-                        server.broadcastMessage(new Message(MessageType.CHGNAMEOK, "server", message.getUserFrom(), record.getName()).toString());
+                        server.broadcastMessage(new Message(MessageType.CHGNAMEOK, "server", message.getUserFrom(), record.getName()));
                     } else {
-                        server.broadcastMessage(new Message(MessageType.CHGNAMEFAILED, "server", message.getUserFrom(), record.getName()).toString());
+                        server.broadcastMessage(new Message(MessageType.CHGNAMEFAILED, "server", message.getUserFrom(), record.getName()));
                     }
                     break;
                 case EXIT:
-                    sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(), "Connection closed")).toString());
+                    sendMessage((new Message(MessageType.EXIT, "server", message.getUserFrom(), "Connection closed")));
                     return;
             }
         }
@@ -119,7 +118,7 @@ public class ClientHandler {
     public void closeConnection() {
         server.unsubscribe(this);
         if (record != null) {
-            server.broadcastMessage(new Message(MessageType.LOGOFF, "server", "ALL", record.getName()).toString());
+            server.broadcastMessage(new Message(MessageType.LOGOFF, "server", "ALL", record.getName()));
         }
         System.out.printf("Connection /%s closed%n", socket);
 
