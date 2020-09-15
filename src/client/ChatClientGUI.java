@@ -93,9 +93,6 @@ public class ChatClientGUI extends JFrame implements chatClient {
             rootElement.appendChild(serverElement);
             //set attribute to server element
             serverElement.setAttribute("value", serverAddr);
-//            Attr attr = doc.createAttribute("value");
-//            attr.setValue(serverAddr);
-//            serverElement.setAttributeNode(attr);
 
             //server element
             Element portElement = doc.createElement("port");
