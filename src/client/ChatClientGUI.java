@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-//TODO: 23) add text colors to chat text field
+//TODO: 23) add text colors to chat text field - JTextPane or JEditorPane + html/css
 //TODO: 24) add users registration
 public class ChatClientGUI extends JFrame implements chatClient {
     private String serverAddr = "localhost";
