@@ -14,7 +14,7 @@ public class AuthFormGUI extends JDialog {
         prepareGUI();
     }
 
-    public String[] showAuth(){
+    public String[] showDialog(){
         setVisible(true);
         return result;
     }

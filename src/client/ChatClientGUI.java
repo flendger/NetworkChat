@@ -4,23 +4,33 @@ import clientServices.ClientService;
 import messages.Message;
 import messages.MessageType;
 import clientServices.ClientLogService;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
-
-//TODO: 25) add network settings to client
 //TODO: 23) add text colors to chat text field
 //TODO: 24) add users registration
-public class ChatClientGUI extends JFrame implements chatClient{
-    private static final String SERVER_ADDR = "localhost";
-    private static final int SERVER_PORT = 8765;
+public class ChatClientGUI extends JFrame implements chatClient {
+    private String serverAddr = "localhost";
+    private int serverPort = 8765;
 
     private final ClientService clientService = new ClientService(this);
 
@@ -34,9 +44,78 @@ public class ChatClientGUI extends JFrame implements chatClient{
     private int currentId = -1;
 
     public ChatClientGUI() {
+        readSettings();
         prepareGUI();
         connect();
         openAuth();
+    }
+
+    private void readSettings() {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(new File("clsettings.xml"));
+
+            NodeList serverNodes = document.getDocumentElement().getElementsByTagName("server");
+            if (serverNodes.getLength() > 0) {
+                Node item = serverNodes.item(0);
+                NamedNodeMap namedNodeMap = item.getAttributes();
+                serverAddr = namedNodeMap.getNamedItem("value").getNodeValue();
+            }
+
+            NodeList portNodes = document.getDocumentElement().getElementsByTagName("port");
+            if (portNodes.getLength() > 0) {
+                Node item = portNodes.item(0);
+                NamedNodeMap namedNodeMap = item.getAttributes();
+                serverPort = Integer.parseInt(namedNodeMap.getNamedItem("value").getNodeValue());
+            }
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(serverAddr);
+        System.out.println(serverPort);
+    }
+
+    private void saveSettings() {
+        try {
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+
+            //root elements
+            Document doc = docBuilder.newDocument();
+
+            Element rootElement = doc.createElement("network-settings");
+            doc.appendChild(rootElement);
+
+            //server element
+            Element serverElement = doc.createElement("server");
+            rootElement.appendChild(serverElement);
+            //set attribute to server element
+            serverElement.setAttribute("value", serverAddr);
+//            Attr attr = doc.createAttribute("value");
+//            attr.setValue(serverAddr);
+//            serverElement.setAttributeNode(attr);
+
+            //server element
+            Element portElement = doc.createElement("port");
+            rootElement.appendChild(portElement);
+            //set attribute to server element
+            portElement.setAttribute("value", String.valueOf(serverPort));
+
+            //write the content into xml file
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource source = new DOMSource(doc);
+
+            StreamResult result = new StreamResult(new File("clsettings.xml"));
+            transformer.transform(source, result);
+
+            System.out.println("Settings are up to date...");
+
+        } catch (ParserConfigurationException | TransformerException e) {
+            e.printStackTrace();
+        }
     }
 
     private void prepareGUI() {
@@ -95,7 +174,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
 
         chatText.setFont(new Font(Font.DIALOG, Font.BOLD, 14));
         chatText.setEditable(false);
-        DefaultCaret caret = (DefaultCaret)chatText.getCaret();
+        DefaultCaret caret = (DefaultCaret) chatText.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         JScrollPane chatScroll = new JScrollPane(chatText);
@@ -192,6 +271,10 @@ public class ChatClientGUI extends JFrame implements chatClient{
         });
         menuConnections.add(itemChgName);
 
+        JMenuItem itemSettings = new JMenuItem("Settings");
+        itemSettings.addActionListener(this::actionPerformed);
+        menuConnections.add(itemSettings);
+
         JMenuItem itemDisconnect = new JMenuItem("Disconnect");
         itemDisconnect.addActionListener(e -> {
             if (clientService.isActive() && !currentUser.isEmpty()) {
@@ -218,7 +301,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
     private void openAuth() {
         if (clientService.isActive()) {
             AuthFormGUI authFormGUI = new AuthFormGUI();
-            String[] msgArr = authFormGUI.showAuth();
+            String[] msgArr = authFormGUI.showDialog();
             if (!msgArr[0].isEmpty()) {
                 Message msg = new Message(MessageType.AUTH, msgArr[0], "server", msgArr[1]);
                 System.out.println(msg);
@@ -227,9 +310,38 @@ public class ChatClientGUI extends JFrame implements chatClient{
         }
     }
 
+    private void openSettings() {
+        HashMap<String, String> setMapEssential = new HashMap<>();
+        setMapEssential.put("server", serverAddr);
+        setMapEssential.put("port", (String.valueOf(serverPort)));
+
+        ClientSettingsGUI setForm = new ClientSettingsGUI(setMapEssential);
+        HashMap<String, String> setMapTarget = setForm.showDialog();
+
+        boolean applyChanges = false;
+        if (setMapTarget.containsKey("server") && !serverAddr.equals(setMapTarget.get("server"))) {
+            serverAddr = setMapTarget.get("server");
+            applyChanges = true;
+        }
+        if (setMapTarget.containsKey("port") && serverPort != Integer.parseInt(setMapTarget.get("port"))) {
+            serverPort = Integer.parseInt(setMapTarget.get("port"));
+            applyChanges = true;
+        }
+
+        if (applyChanges) {
+            saveSettings();
+
+            if (!clientService.isActive()) {
+                connect();
+            } else {
+                addMessageToChat("To apply new settings, please reconnect to server...");
+            }
+        }
+    }
+
     private void connect() {
         try {
-            clientService.openConnection(SERVER_ADDR, SERVER_PORT);
+            clientService.openConnection(serverAddr, serverPort);
         } catch (IOException e) {
             e.printStackTrace();
             addMessageToChat("Connection to server failed...");
@@ -277,7 +389,7 @@ public class ChatClientGUI extends JFrame implements chatClient{
     }
 
     private void setChatTitle() {
-        setTitle("Simple chat... " + ((currentUser.isEmpty()) ? "":("[" + currentUser + "]")));
+        setTitle("Simple chat... " + ((currentUser.isEmpty()) ? "" : ("[" + currentUser + "]")));
     }
 
     @Override
@@ -348,5 +460,9 @@ public class ChatClientGUI extends JFrame implements chatClient{
     @Override
     public void handleLogInfo(String msg) {
         addMessageToChat(msg);
+    }
+
+    private void actionPerformed(ActionEvent e) {
+        openSettings();
     }
 }
