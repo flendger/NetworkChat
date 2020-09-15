@@ -18,7 +18,6 @@ import java.util.List;
 //TODO: 25) add network settings to client
 //TODO: 23) add text colors to chat text field
 //TODO: 24) add users registration
-//TODO: Issue: client breaks if connection to server has lost
 public class ChatClientGUI extends JFrame implements chatClient{
     private static final String SERVER_ADDR = "localhost";
     private static final int SERVER_PORT = 8765;
@@ -344,5 +343,10 @@ public class ChatClientGUI extends JFrame implements chatClient{
         currentId = -1;
         addMessageToChat("Connection closed...");
         setChatTitle();
+    }
+
+    @Override
+    public void handleLogInfo(String msg) {
+        addMessageToChat(msg);
     }
 }

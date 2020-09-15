@@ -43,7 +43,14 @@ public class ClientService {
     private void listenServer() {
         while (true) {
             if (isActive()) {
-                Message msg = new Message(readMsg());
+                Message msg;
+                try {
+                    msg = new Message(readMsg());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    clientView.handleLogInfo("Some issues with the connection...");
+                    break;
+                }
                 clientView.handleIncomingMessage(msg);
                 if (msg.getMessageType() == MessageType.EXIT) {
                     break;
@@ -86,14 +93,10 @@ public class ClientService {
         }
     }
 
-    public String readMsg() {
-        String msg = "";
+    private String readMsg() throws IOException{
+        String msg;
         synchronized (in) {
-            try {
-                msg = in.readUTF();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            msg = in.readUTF();
         }
         return msg;
     }
